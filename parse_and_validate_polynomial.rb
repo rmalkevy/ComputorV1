@@ -64,6 +64,7 @@ class ArgsParser
     unless term[/[xX]/].nil?
       degree = numeric?(term[-1]) ? term[-1].to_i : 1
     end
+    degree
   end
 
   def numeric?(lookAhead)
@@ -96,8 +97,7 @@ class ArgsParser
       reduced_equation_str += number + ' * X^' + term.degree.to_s + ' '
     end
     reduced_equation_str += '= 0'
-    reduced_equation_str = cut_first_two_chars(reduced_equation_str)
-    reduced_equation_str
+    cut_first_two_chars(reduced_equation_str)
   end
 
   def prepare_number(number)
@@ -127,11 +127,3 @@ class ArgsParser
   end
 
 end
-
-
-# Tasks
-# >./computor "-578 * X^0 + 4 * X^1 - 9.3 * X^2 = 1 * X^0"
-# Reduced form: 4 * X^0 + 4 * X^1 - 9.3 * X^2 = 0
-# Polynomial degree: 2
-# Discriminant is strictly positive, the two solutions are:
-# 0.905239
