@@ -4,7 +4,7 @@ class ArgsParser
   attr_reader :raw_arg, :polynomial_terms_list, :reduced_equation
 
   def initialize(args)
-    if args.length == 1
+    if args.length == 1 && args[0] != ''
       @raw_arg = args[0].gsub(/\s+/, "")  # delete all whitespaces in equation
       @polynomial_terms_list = []
       @reduced_equation = []
@@ -37,6 +37,10 @@ class ArgsParser
   #
   def split_to_polynomial_terms
     left_and_right_sides = @raw_arg.split(/=/)
+    unless left_and_right_sides.length == 2
+      exit_with_message "Error: Invalid string.\n" \
+                        "The example of a valid equation: -578 * X^0 + 4 * X^1 - 9.3 * X^2 = 1 * X^0"
+    end
     left_side = left_and_right_sides[0].split(/(?=[-+])/)
     right_side = left_and_right_sides[1].split(/(?=[-+])/)
 
