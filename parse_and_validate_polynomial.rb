@@ -55,8 +55,9 @@ class ArgsParser
 
   def extract_number(term)
     number = term.split(/\*|x|X/).first
-    number = number[/[-+]?[0-9]*\.?[0-9]+/]
-    number = number.nil? ? '1' : number
+    if number.nil? || number == ''
+      number = '1'
+    end
     number[/[.]/].nil? ? number.to_i : number.to_f
   end
 
