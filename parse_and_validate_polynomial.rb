@@ -10,7 +10,7 @@ class ArgsParser
       @reduced_equation = []
 
       unless valid_equation?(@raw_arg)
-        exit_with_message "Error: Unsupported chars in the string.\n" \
+        exit_with_message "Error: Invalid string.\n" \
                           "The example of a valid equation: -578 * X^0 + 4 * X^1 - 9.3 * X^2 = 1 * X^0"
       end
 
@@ -29,7 +29,7 @@ class ArgsParser
   # Validate equation
   #
   def valid_equation?(str)
-    (str =~ /[^-.^*+=xX0-9]/).nil?  # TODO: check this regex
+    !str.match(/[^-.^*+xX=0-9]/)
   end
 
 
@@ -40,7 +40,6 @@ class ArgsParser
     left_side = left_and_right_sides[0].split(/(?=[-+])/)
     right_side = left_and_right_sides[1].split(/(?=[-+])/)
 
-    @polynomial_terms_list = []
     left_side.each do |term|
       number = extract_number(term)
       degree = extract_degree(term)
@@ -55,7 +54,9 @@ class ArgsParser
   end
 
   def extract_number(term)
-    number = term[/[-+]?[0-9]*\.?[0-9]+/]
+    number = term.split(/\*|x|X/).first
+    number = number[/[-+]?[0-9]*\.?[0-9]+/]
+    number = number.nil? ? '1' : number
     number[/[.]/].nil? ? number.to_i : number.to_f
   end
 
@@ -75,18 +76,17 @@ class ArgsParser
   # Reduce equation
   #
   def reduce_equation
-    zero_degree_value = @polynomial_terms_list.select{|term| term.degree == 0}.map(&:value).inject(0, :+)
-    one_degree_value = @polynomial_terms_list.select{|term| term.degree == 1}.map(&:value).inject(0, :+)
-    two_degree_value = @polynomial_terms_list.select{|term| term.degree == 2}.map(&:value).inject(0, :+)
-    unless zero_degree_value.nil? or zero_degree_value == 0
-
-      @reduced_equation << PolynomialTerm.new(zero_degree_value, 0)
+    degrees = @polynomial_terms_list.map(&:degree).sort.uniq
+    degrees.each do |degree|
+      degree_value = @polynomial_terms_list.select{|term| term.degree == degree}.map(&:value).inject(0, :+)
+      unless degree_value.nil? or degree_value == 0
+        @reduced_equation << PolynomialTerm.new(degree_value, degree)
+      end
     end
-    unless one_degree_value.nil? or one_degree_value == 0
-      @reduced_equation << PolynomialTerm.new(one_degree_value, 1)
-    end
-    unless two_degree_value.nil? or two_degree_value == 0
-      @reduced_equation << PolynomialTerm.new(two_degree_value, 2)
+    if @reduced_equation.length == 0
+      puts "All the real numbers are solution"
+      puts "Equation is reduced at all! Try to add equations with unknown variables"
+      exit
     end
   end
 
@@ -101,8 +101,16 @@ class ArgsParser
   end
 
   def prepare_number(number)
-    plus = number > 0 ? '+ ' : ''
-    result = plus
+    sign = ''
+    result = sign
+    if number >= 0
+      sign = '+ '
+    else
+      sign = '- '
+      number *= -1
+    end
+    result += sign
+
     if number.to_s[/[.]/]
       result += number.round(6).to_s
     else
@@ -112,9 +120,11 @@ class ArgsParser
   end
 
   def cut_first_two_chars(equation)
-    ready_reduced_equation = equation
-    if @reduced_equation[0].value > 0
+    ready_reduced_equation = ''
+    if @reduced_equation[0].value >= 0
       ready_reduced_equation = equation[2..-1]
+    else
+      ready_reduced_equation = '-' + equation[2..-1]
     end
     ready_reduced_equation
   end
